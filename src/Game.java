@@ -38,7 +38,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
         moveEsquerda = moveDireita = moveCima = moveBaixo = false;
 
-        playMusic("music/Ayers-Rock.wav");
+        tocarMusica("music/Ayers-Rock.wav");
 
     }
 
@@ -52,7 +52,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
 
         // Desenhar nave
-        if (explosao == null && vida > 0) { // Apenas desenha a nave se não houver explosão em andamento
+        if (explosao == null && vida > 0) { // Ddesenha a nave se não houver explosão em andamento
             g.drawImage(naveImg, naveX, naveY, naveLarg, naveAlt, this);
         }
 
@@ -83,7 +83,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
 
     public Clip clip;
-    public void playMusic(String filePath) {
+    public void tocarMusica(String filePath) {
         try {
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(filePath));
             clip = AudioSystem.getClip();
@@ -95,7 +95,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    public void playSound(String filePath) {
+    public void efeitoSom(String filePath) {
         try {
             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(filePath));
             Clip soundClip = AudioSystem.getClip();
@@ -106,11 +106,17 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         }
     }
 
+    private void pararMusica() {
+        if (clip != null && clip.isRunning()) {
+            clip.stop();
+            clip.close();
+        }
+    }
 
-    private void spawnAsteroid() {
+    public void spawnAsteroide() {
         int posicaoX = (int) (Math.random() * getWidth());
-        int speed = (int) (Math.random() * 3) + 2;
-        Asteroide newAsteroide = new Asteroide(posicaoX, -50, speed);
+        int velocidade = (int) (Math.random() * 5) + 2;
+        Asteroide newAsteroide = new Asteroide(posicaoX, -50, velocidade);
         asteroides.add(newAsteroide);
     }
 
@@ -125,11 +131,11 @@ public class Game extends JPanel implements ActionListener, KeyListener {
                 explosao = new Explosao(naveX, naveY, this); // Inicia a explosão
                 asteroides.remove(asteroide);
 
-                playSound("music/explosion2.wav");
+                efeitoSom("music/explosion2.wav");
 
                 if (vida <= 0) {
                     // Cria um Timer para esperar antes de chamar gameOver()
-                    Timer timer = new Timer(200, e -> gameOver()); // Espera 400ms
+                    Timer timer = new Timer(200, e -> gameOver()); // Espera 200ms
                     timer.setRepeats(false); // Não repetir
                     timer.start(); // Inicia o timer
                 }
@@ -139,29 +145,24 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    void checkVitoria(){
+    public void checarVitoria(){
         int tempoCorrido = (int) ((System.currentTimeMillis() - tempoInicio) / 1000);
         if (tempoCorrido > duracaoJogo){
             running = false;
-            stopMusic();
-            playSound("music/victory.wav");
+            pararMusica();
+            efeitoSom("music/victory.wav");
             JOptionPane.showMessageDialog(this, "Vitória!");
             System.exit(0);
         }
     }
 
 
-    private void stopMusic() {
-        if (clip != null && clip.isRunning()) {
-            clip.stop();
-            clip.close();
-        }
-    }
+
 
 
     private void gameOver() {
-        stopMusic(); // Para a música ao acabar o jogo
-        playSound("music/defeat.wav");
+        pararMusica(); // Para a música ao acabar o jogo
+        efeitoSom("music/defeat.wav");
         timer.stop();
         JOptionPane.showMessageDialog(this, "Game Over!");
         System.exit(0);
@@ -189,7 +190,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
         // Spawna novos asteroides com intervalo
         if (Math.random() < 0.1) { // Controla a frequência de aparecimento
-            spawnAsteroid();
+            spawnAsteroide();
         }
 
         // Atualiza a posição da nave
@@ -201,7 +202,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         // Verifica colisões
         checarColisao();
 
-        checkVitoria();
+        checarVitoria();
 
         // Atualiza tela
         repaint();
